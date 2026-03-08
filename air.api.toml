@@ -1,0 +1,11 @@
+root = "."
+tmp_dir = "build"
+
+[build]
+  cmd = "go build -o ./build/api-main ./cmd/api/main.go"
+  bin = "./build/api-main"
+  exclude_dir = ["build"]
+  delay = 1000
+
+[log]
+  time = true
