@@ -1,0 +1,10 @@
+FROM arigaio/atlas:1.1.6-alpine
+
+LABEL org.opencontainers.image.source=https://github.com/Olyxz16/go-chi-oauth-psql
+
+COPY ./internal/db/migrations /migrations
+
+RUN atlas migrate hash --dir file:///migrations
+
+ENTRYPOINT [ "sh", "-c" ]
+CMD [ "atlas migrate apply --dir file:///migrations --url ${DATABASE_URL}" ]

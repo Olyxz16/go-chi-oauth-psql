@@ -10,6 +10,7 @@ require (
 	github.com/markbates/goth v1.82.0
 	github.com/o1egl/paseto v1.0.0
 	github.com/spf13/cobra v1.10.1
+	go.uber.org/zap v1.27.1
 	golang.org/x/oauth2 v0.34.0
 )
 
@@ -28,8 +29,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect

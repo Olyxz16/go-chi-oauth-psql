@@ -16,15 +16,12 @@ func main() {
 
 	cfg := config.NewServerConfig()
 
-	pool, err := config.NewPostgresPool(config.NewPostgresConfig())
+	pgCfg := config.NewPostgresConfig()
+	pool, err := config.NewPostgresPool(pgCfg)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to connect to postgres: %v", err))
 	}
 	defer pool.Close()
-
-	if err := config.Migrate(pool); err != nil {
-		panic(fmt.Sprintf("Failed to migrate database: %v", err))
-	}
 
 	userRepo := repositories.NewUserRepository(pool)
 	userService := services.NewUserService(userRepo)

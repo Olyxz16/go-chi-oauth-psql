@@ -5,53 +5,75 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Olyxz16/go-chi-oauth-psql/internal/auth/model"
+	"github.com/Olyxz16/go-chi-oauth-psql/internal/db"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct {
-	pool *pgxpool.Pool
+	queries *db.Queries
 }
 
 func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
-	return &UserRepository{pool: pool}
+	return &UserRepository{queries: db.New(pool)}
 }
 
 // CreateUser inserts a new user or does nothing if the ID already exists (idempotent upsert).
 func (r *UserRepository) CreateUser(ctx context.Context, u *model.User) error {
-	_, err := r.pool.Exec(ctx, `
-		INSERT INTO users (id, email, provider)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (id) DO NOTHING
-	`, u.ID, u.Email, string(u.Provider))
+	var id pgtype.UUID
+	copy(id.Bytes[:], u.ID[:])
+	id.Valid = true
+
+	err := r.queries.CreateUser(ctx, db.CreateUserParams{
+		ID:       id,
+		Email:    u.Email,
+		Provider: string(u.Provider),
+	})
 	return err
 }
 
 // GetUser fetches a user by their UUID string.
-func (r *UserRepository) GetUser(ctx context.Context, id string) (*model.User, error) {
-	row := r.pool.QueryRow(ctx, `
-		SELECT id, email, provider
-		FROM users
-		WHERE id = $1
-	`, id)
+func (r *UserRepository) GetUser(ctx context.Context, idStr string) (*model.User, error) {
+	parsedID, err := uuid.Parse(idStr)
+	if err != nil {
+		return nil, err
+	}
 
-	var u model.User
-	var provider string
-	if err := row.Scan(&u.ID, &u.Email, &provider); err != nil {
+	var id pgtype.UUID
+	copy(id.Bytes[:], parsedID[:])
+	id.Valid = true
+
+	row, err := r.queries.GetUser(ctx, id)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, model.ErrUserNotFound
 		}
 		return nil, err
 	}
-	u.Provider = model.Provider(provider)
-	return &u, nil
+
+	var uID uuid.UUID
+	copy(uID[:], row.ID.Bytes[:])
+
+	return &model.User{
+		ID:       uID,
+		Email:    row.Email,
+		Provider: model.Provider(row.Provider),
+	}, nil
 }
 
 // DeleteUser removes a user by their UUID string.
-func (r *UserRepository) DeleteUser(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, `
-		DELETE FROM users WHERE id = $1
-	`, id)
-	return err
+func (r *UserRepository) DeleteUser(ctx context.Context, idStr string) error {
+	parsedID, err := uuid.Parse(idStr)
+	if err != nil {
+		return err
+	}
+
+	var id pgtype.UUID
+	copy(id.Bytes[:], parsedID[:])
+	id.Valid = true
+
+	return r.queries.DeleteUser(ctx, id)
 }

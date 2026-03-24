@@ -3,16 +3,23 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DSN builds a PostgreSQL connection string from config.
+// DSN builds a PostgreSQL connection string from config for pgxpool.
 func (c *PostgresConfig) DSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
+	)
+}
+
+// URL builds a PostgreSQL connection string from config for Atlas.
+func (c *PostgresConfig) URL() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		c.User, c.Password, c.Host, c.Port, c.DBName, c.SSLMode,
 	)
 }
 
@@ -28,26 +35,4 @@ func NewPostgresPool(cfg *PostgresConfig) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
-}
-
-// Migrate runs idempotent DDL migrations.
-func Migrate(pool *pgxpool.Pool) error {
-	ctx := context.Background()
-
-	log.Println("Running database migrations...")
-
-	_, err := pool.Exec(ctx, `
-		CREATE TABLE IF NOT EXISTS users (
-			id         UUID        PRIMARY KEY,
-			email      TEXT        NOT NULL UNIQUE,
-			provider   TEXT        NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-		);
-	`)
-	if err != nil {
-		return fmt.Errorf("failed to create users table: %w", err)
-	}
-
-	log.Println("Migrations complete.")
-	return nil
 }

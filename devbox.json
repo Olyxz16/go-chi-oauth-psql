@@ -4,16 +4,16 @@
     "go@1.24.9",
     "air@1.61.7",
     "postgresql_16@latest",
-    "podman@latest",
-    "hurl@latest",
-    "mkdocs@latest"
+    "atlas@latest",
+    "sqlc@latest"
   ],
   "shell": {
     "init_hook": [],
     "scripts": {
       "up": "process-compose up",
       "down": "process-compose down",
-      "watch:api": "air -c air.api.toml"
+      "watch:api": "air -c air.api.toml",
+      "migrate": "atlas migrate apply --dir 'file://internal/db/migrations' --url 'postgres://postgres:postgres@localhost:5432/app?sslmode=disable'"
     }
   }
 }

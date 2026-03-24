@@ -1,4 +1,4 @@
-# go-chi-mfa-psql
+# go-chi-oauth-psql
 
 A production-ready Go API template featuring Google OAuth 2.0 authentication, PASETO tokens, PostgreSQL persistence, and a companion CLI — all wired together and ready to clone and extend.
 
@@ -9,7 +9,7 @@ A production-ready Go API template featuring Google OAuth 2.0 authentication, PA
 This template gives you a working authentication system out of the box:
 
 1. **Browser-based OAuth flow** — a web endpoint hands off to Google via [Goth](https://github.com/markbates/goth), creates the user in PostgreSQL, and stores a session cookie.
-2. **CLI OAuth flow** — the CLI spins up a local HTTP server on a random port, opens the Google consent page, captures the authorization code, and exchanges it with the API for a PASETO access + refresh token pair that is stored in `~/.config/go-chi-mfa-dynamo-cli/tokens.json`.
+2. **CLI OAuth flow** — the CLI spins up a local HTTP server on a random port, opens the Google consent page, captures the authorization code, and exchanges it with the API for a PASETO access + refresh token pair that is stored in `~/.config/go-chi-oauth-psql-cli/tokens.json`.
 3. **Token refresh** — a custom `http.RoundTripper` in the CLI transparently retries any `401` response by exchanging the refresh token before propagating the error.
 4. **Protected endpoints** — an `AuthMiddleware` validates the PASETO access token on every request and injects the user email into the request context.
 
@@ -47,17 +47,20 @@ cli whoami   --api-url http://localhost:8080
 │   ├── auth/
 │   │   ├── controller/      # HTTP handlers
 │   │   ├── model/           # User + Provider types
-│   │   ├── repositories/    # PostgreSQL queries
+│   │   ├── repositories/    # Repositories (using sqlc generated code)
 │   │   └── services/        # UserService, TokenService
 │   ├── cli/
 │   │   ├── auth/            # Google PKCE flow + token file store
 │   │   ├── client/          # AuthTransport (auto-refresh)
 │   │   └── commands/        # cobra commands
-│   └── config/              # Env config, pgxpool setup, DB migrations, Goth, logger
-├── tf/                      # Terraform – AWS RDS PostgreSQL
-├── test/auth/               # Hurl integration test
+│   ├── config/              # Env config, pgxpool setup, Goth, logger
+│   └── db/                  # Database queries (sqlc)
+│       ├── migrations/      # SQL migration files for Atlas
+│       ├── queries/         # SQL query files for sqlc
+│       └── *.go             # sqlc generated code
 ├── process-compose.yaml     # Local dev: postgres + pgadmin containers
 ├── devbox.json              # Reproducible dev environment
+├── sqlc.yaml                # sqlc configuration
 └── air.api.toml             # Live-reload config for the API
 ```
 
@@ -67,7 +70,7 @@ cli whoami   --api-url http://localhost:8080
 
 ### Prerequisites
 
-- [Devbox](https://www.jetify.com/devbox) (installs Go, Air, psql, Podman, Hurl automatically)
+- [Devbox](https://www.jetify.com/devbox) (installs Go, Air, psql, Atlas, sqlc automatically)
 - A Google Cloud project with an OAuth 2.0 client ID
 
 ### 1. Clone and configure
@@ -84,7 +87,15 @@ devbox run up
 # Starts PostgreSQL on :5432 and pgAdmin on :8001
 ```
 
-### 3. Run the API
+### 3. Run migrations
+
+Apply pending migrations using **Atlas CLI**:
+
+```bash
+devbox run migrate
+```
+
+### 4. Run the API
 
 ```bash
 # With live-reload
@@ -94,9 +105,9 @@ air -c air.api.toml
 go run ./cmd/api/main.go
 ```
 
-The API runs on `http://localhost:8080`. On first startup it runs migrations and creates the `users` table automatically.
+The API runs on `http://localhost:8080`.
 
-### 4. Try the CLI
+### 5. Try the CLI
 
 ```bash
 go run ./cmd/cli/main.go login --client-id $GOOGLE_ACCESS_KEY_ID
@@ -124,24 +135,6 @@ go run ./cmd/cli/main.go whoami
 
 ---
 
-## Deploying to AWS
-
-Terraform files are provided under `tf/` to provision an RDS PostgreSQL instance.
-
-```bash
-cd tf
-terraform init
-terraform apply \
-  -var="vpc_id=vpc-xxx" \
-  -var="private_subnet_ids=[\"subnet-aaa\",\"subnet-bbb\"]" \
-  -var="app_security_group_id=sg-xxx" \
-  -var="db_password=changeme"
-```
-
-The module creates a subnet group, a dedicated security group (port 5432 open only to your app SG), a parameter group, and an RDS instance. In production (`environment=prod`) it enables multi-AZ, deletion protection, and a 7-day backup window automatically.
-
----
-
 ## How to extend
 
 ### Add a new OAuth provider
@@ -159,32 +152,23 @@ The module creates a subnet group, a dedicated security group (port 5432 open on
 
 ### Add a new database table
 
-1. Add a `CREATE TABLE IF NOT EXISTS` statement to the `Migrate` function in `internal/config/postgres.go`.
-2. Create a model struct in `internal/auth/model/` (or a new `internal/<feature>/model/` package).
-3. Create a repository in `internal/auth/repositories/` (or a new package) that accepts `*pgxpool.Pool`.
-4. Create a service that wraps the repository and inject it through `main.go`.
+1. Create a new migration file in `internal/db/migrations/`:
+   ```bash
+   atlas migrate diff add_some_table --dir "file://internal/db/migrations" --to "file://schema.hcl" # or manual SQL
+   # Then update the checksum:
+   atlas migrate hash --dir "file://internal/db/migrations"
+   ```
+2. Run migrations: `devbox run migrate`.
+3. Create SQL queries in `internal/db/queries/`.
+4. Run `sqlc generate`.
+5. Update/create a repository in `internal/auth/repositories/` that uses the generated `db.Queries`.
+6. Create a service that wraps the repository and inject it through `main.go`.
 
 ### Add a new CLI command
 
 1. Create a file in `internal/cli/commands/`, using `cobra.Command` following the pattern in `whoami.go`.
 2. Register it with `rootCmd.AddCommand(commands.NewYourCommand())` in `cmd/cli/main.go`.
 3. Use the `client.AuthTransport` HTTP client for any authenticated API calls — it handles token refresh automatically.
-
-### Add a new migration
-
-Append idempotent SQL to the `Migrate` function in `internal/config/postgres.go`. For anything more complex (ordering, rollbacks), consider replacing it with a migration library like [goose](https://github.com/pressly/goose) and pointing it at the same `pgxpool.Pool`.
-
----
-
-## Running tests
-
-```bash
-# Unit tests
-go test ./...
-
-# Integration test (requires a running API on :8081)
-hurl --test test/auth/google-auth.hurl --variable host=http://localhost:8081
-```
 
 ---
 
@@ -196,6 +180,8 @@ hurl --test test/auth/google-auth.hurl --variable host=http://localhost:8081
 | [markbates/goth](https://github.com/markbates/goth) | OAuth provider abstraction |
 | [o1egl/paseto](https://github.com/o1egl/paseto) | PASETO v2 token encryption |
 | [jackc/pgx](https://github.com/jackc/pgx) | PostgreSQL driver + connection pool |
+| [ariga.io/atlas](https://atlasgo.io/) | Database migrations |
+| [sqlc](https://sqlc.dev/) | Type-safe SQL generator |
 | [spf13/cobra](https://github.com/spf13/cobra) | CLI framework |
 | [caarlos0/env](https://github.com/caarlos0/env) | Struct-based env config |
 | [go.uber.org/zap](https://pkg.go.dev/go.uber.org/zap) | Structured logging |
