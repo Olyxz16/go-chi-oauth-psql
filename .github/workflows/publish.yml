@@ -42,7 +42,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          load: true
           tags: ${{ steps.api-meta.outputs.tags }}
           labels: ${{ steps.api-meta.outputs.labels }}
 
@@ -82,6 +81,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          load: true
           tags: ${{ steps.migration-meta.outputs.tags }}
           labels: ${{ steps.migration-meta.outputs.labels }}
