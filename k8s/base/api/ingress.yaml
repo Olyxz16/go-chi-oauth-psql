@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-dns-prod"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: template.olyxz16.fr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-svc
+                port:
+                  number: 80
+
+  tls:
+    - hosts:
+        - template.olyxz16.fr
+      secretName: api-tls-cert

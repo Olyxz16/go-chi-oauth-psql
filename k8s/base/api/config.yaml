@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  HOST: "0.0.0.0"
+  PORT: "3000"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DEBUG: false
