@@ -24,12 +24,12 @@ jobs:
 
       - name: Docker meta
         id: api-meta
-        uses: docker@metadata-actions@v5
+        uses: docker/metadata-action@v5
         with:
           flavor: |
             latest=auto
           image: |
-            ghcr.io/Olyxz16/template-api
+            ghcr.io/${{ github.repository }}/api
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -43,8 +43,8 @@ jobs:
           file: ./Dockerfile
           push: true
           load: true
-          tags: ${{ steps.backend-meta.outputs.tags }}
-          labels: ${{ steps.backend-meta.outputs.labels }}
+          tags: ${{ steps.api-meta.outputs.tags }}
+          labels: ${{ steps.api-meta.outputs.labels }}
 
   publish-migration:
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
 
       - name: Docker meta
         id: migration-meta
-        uses: docker@metadata-actions@v5
+        uses: docker/metadata-action@v5
         with:
           flavor: |
             latest=auto
@@ -83,5 +83,5 @@ jobs:
           file: ./Dockerfile
           push: true
           load: true
-          tags: ${{ steps.backend-meta.outputs.tags }}
-          labels: ${{ steps.backend-meta.outputs.labels }}
+          tags: ${{ steps.migration-meta.outputs.tags }}
+          labels: ${{ steps.migration-meta.outputs.labels }}
