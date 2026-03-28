@@ -28,6 +28,11 @@ spec:
                 secretKeyRef:
                   name: postgres-secrets
                   key: user-pass
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: redis-password
             - name: TOKEN_SECRET
               valueFrom:
                 secretKeyRef:
