@@ -18,5 +18,5 @@ spec:
             - name: "DATABASE_URL"
               valueFrom:
                 secretKeyRef:
-                  name: "postgres-secrets"
-                  key: ""
+                  name: "api-secrets"
+                  key: "database-url"
