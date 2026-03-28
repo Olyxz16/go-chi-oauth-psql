@@ -34,16 +34,16 @@ spec:
             - secretRef:
                 name: api-secrets
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 3000
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 3000
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
