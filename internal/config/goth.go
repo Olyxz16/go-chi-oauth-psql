@@ -10,7 +10,7 @@ func SetupGoth(cfg *GothConfig) {
 		google.New(
 			cfg.GoogleAccessKeyId,
 			cfg.GoogleSecretAccessKey,
-			"http://localhost:8080/auth/google/callback",
+			cfg.GoogleCallbackUrl,
 			"email",
 		),
 	)

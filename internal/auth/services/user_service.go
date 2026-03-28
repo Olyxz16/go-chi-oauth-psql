@@ -28,8 +28,10 @@ func (s *UserService) CreateUser(ctx context.Context, email string, provider mod
 	}
 
 	err := s.repo.CreateUser(ctx, user)
-
-	return user, err
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
