@@ -43,6 +43,9 @@ spec:
                 secretKeyRef:
                   name: api-secrets
                   key: google-secret-access-key
+          envFrom:
+            - configMapRef:
+                name: api-config
           ports:
             - containerPort: 8080
           readinessProbe:
