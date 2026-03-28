@@ -36,4 +36,4 @@ COPY --from=build --chown=appuser:appuser /build/api ./api
 
 USER appuser:appuser
 
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["/app/api"]
