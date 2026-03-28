@@ -26,6 +26,13 @@ type GothConfig struct {
 	GoogleCallbackUrl	  string `env:"GOOGLE_CALLBACK_URL,required"`
 }
 
+type RedisConfig struct {
+    Host     string `env:"REDIS_HOST" envDefault:"localhost"`
+    Port     int    `env:"REDIS_PORT" envDefault:"6379"`
+    Password string `env:"REDIS_PASSWORD" envDefault:""`
+    DB       int    `env:"REDIS_DB" envDefault:"0"`
+}
+
 func NewServerConfig() *ServerConfig {
 	cfg := &ServerConfig{}
 	if err := env.Parse(cfg); err != nil {
@@ -48,4 +55,12 @@ func NewGothConfig() *GothConfig {
 		panic(err.Error())
 	}
 	return cfg
+}
+
+func NewRedisConfig() *RedisConfig {
+    cfg := &RedisConfig{}
+    if err := env.Parse(cfg); err != nil {
+        panic(err.Error())
+    }
+    return cfg
 }

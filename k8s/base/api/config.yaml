@@ -6,8 +6,11 @@ metadata:
 data:
   HOST: "0.0.0.0"
   PORT: "8080"
+  DEBUG: "false"
   POSTGRES_HOST: "postgres-postgresql.template.svc.cluster.local"
   POSTGRES_PORT: "5432"
   POSTGRES_DB: "database"
-  DEBUG: "false"
+  REDIS_HOST: "redis-master.template.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
   GOOGLE_CALLBACK_URL: ""
