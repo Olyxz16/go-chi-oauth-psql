@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: template
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      restartPolicy: Never
+      containers:
+        - name: migration
+          image: ghcr.io/olyxz16/go-chi-oauth-psql/migration:latest
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-secrets
