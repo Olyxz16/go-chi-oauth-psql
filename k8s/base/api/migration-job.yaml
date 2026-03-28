@@ -14,8 +14,9 @@ spec:
       containers:
         - name: migration
           image: ghcr.io/olyxz16/go-chi-oauth-psql/migration:latest
-          envFrom:
-            - configMapRef:
-                name: api-config
-            - secretRef:
-                name: api-secrets
+          env: 
+            - name: "DATABASE_URL"
+              valueFrom:
+                secretKeyRef:
+                  name: "postgres-secrets"
+                  key: ""
