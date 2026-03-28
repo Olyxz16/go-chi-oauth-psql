@@ -8,4 +8,5 @@ data:
   PORT: "8080"
   POSTGRES_HOST: "postgres-postgresql.template.svc.cluster.local"
   POSTGRES_PORT: "5432"
+  POSTGRES_DB: "database"
   DEBUG: "false"
