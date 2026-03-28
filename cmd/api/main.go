@@ -8,6 +8,7 @@ import (
 	"github.com/Olyxz16/go-chi-oauth-psql/internal/auth/repositories"
 	"github.com/Olyxz16/go-chi-oauth-psql/internal/auth/services"
 	"github.com/Olyxz16/go-chi-oauth-psql/internal/config"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -16,10 +17,12 @@ func main() {
 
 	cfg := config.NewServerConfig()
 
+	logger := config.DefaultLogger()
+
 	pgCfg := config.NewPostgresConfig()
 	pool, err := config.NewPostgresPool(pgCfg)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to postgres: %v", err))
+		logger.Fatal("Failed to connect to postgres", zap.Error(err))
 	}
 	defer pool.Close()
 
@@ -32,6 +35,9 @@ func main() {
 		Handler: api.RegisterRoutes(userService, tokenService, gothConf.GoogleAccessKeyId),
 	}
 
-	server.ListenAndServe()
+	if err = server.ListenAndServe() ; err != nil {
+		logger.Fatal("Server failed. ", zap.Error(err))
+	}
+
 }
 

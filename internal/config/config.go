@@ -23,6 +23,7 @@ type PostgresConfig struct {
 type GothConfig struct {
 	GoogleAccessKeyId     string `env:"GOOGLE_ACCESS_KEY_ID,required"`
 	GoogleSecretAccessKey string `env:"GOOGLE_SECRET_ACCESS_KEY,required"`
+	GoogleCallbackUrl	  string `env:"GOOGLE_CALLBACK_URL,required"`
 }
 
 func NewServerConfig() *ServerConfig {

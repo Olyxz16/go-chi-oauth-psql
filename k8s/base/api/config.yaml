@@ -10,3 +10,4 @@ data:
   POSTGRES_PORT: "5432"
   POSTGRES_DB: "database"
   DEBUG: "false"
+  GOOGLE_CALLBACK_URL: ""

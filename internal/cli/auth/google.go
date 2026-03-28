@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
+	"crypto/rand"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -31,7 +33,11 @@ func PerformGoogleLogin(googleClientId string) (string, string, error) {
 	}
 
 	// 3. Generate the Google Auth URL
-	state := "state-token" // In production, use a random string for security
+	state, err := generateState()
+	if err != nil {
+		return "", "", err
+	}
+
 	authURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	fmt.Printf("Opening browser for Google Login...\n")
@@ -93,4 +99,13 @@ func PerformGoogleLogin(googleClientId string) (string, string, error) {
 
 	// Return the code AND the redirectURL so the API can use the exact same one for exchange
 	return code, redirectURL, nil
+}
+
+func generateState() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+
 }
