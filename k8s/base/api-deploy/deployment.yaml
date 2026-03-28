@@ -28,11 +28,21 @@ spec:
                 secretKeyRef:
                   name: postgres-secrets
                   key: user-pass
-          envFrom:
-            - configMapRef:
-                name: api-config
-            - secretRef:
-                name: api-secrets
+            - name: TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: token-secret
+            - name: GOOGLE_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: google-access-key-id
+            - name: GOOGLE_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: google-secret-access-key
           ports:
             - containerPort: 8080
           readinessProbe:
