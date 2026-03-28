@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-deployment
+  namespace: template
   labels:
     app: template-api
 spec:
@@ -27,11 +28,22 @@ spec:
                 secretKeyRef:
                   name: postgres-secrets
                   key: user-pass
-
           envFrom:
             - configMapRef:
                 name: api-config
             - secretRef:
-                name: api-secret
+                name: api-secrets
           ports:
             - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30

@@ -17,5 +17,9 @@ func RegisterRoutes(userService *services.UserService, tokenService *services.To
 
 	r.Mount("/auth", controller.AuthController(userService, tokenService, googleClientID))
 
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	return r
 }
