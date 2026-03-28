@@ -26,6 +26,8 @@ spec:
         name: bitnami
         namespace: flux-system
   values:
+    global:
+      imageRegistry: "ghcr.io"
     auth:
       enabled: true
       existingSecret: redis-secrets
