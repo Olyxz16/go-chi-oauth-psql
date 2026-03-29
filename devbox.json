@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
   "packages": [
-    "go@1.24.9",
+    "go@1.26.1",
     "air@1.61.7",
-    "postgresql_16@latest",
+    "postgresql_17@latest",
     "atlas@latest",
     "sqlc@latest"
   ],
@@ -13,7 +13,8 @@
       "up": "process-compose up",
       "down": "process-compose down",
       "watch:api": "air -c air.api.toml",
-      "migrate": "atlas migrate apply --dir 'file://internal/db/migrations' --url 'postgres://postgres:postgres@localhost:5432/app?sslmode=disable'"
+      "migrate": "atlas migrate apply --dir 'file://internal/db/migrations' --url 'postgres://postgres:postgres@localhost:5432/app?sslmode=disable'",
+      "migrate:diff": "atlas migrate diff $1 --dir 'file://internal/db/migrations' --to 'file://internal/db/schema.sql' --dev-url 'docker://postgres/16/dev'"
     }
   }
 }
